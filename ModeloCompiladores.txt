@@ -1,0 +1,53 @@
+  TSID TsID = TS.getTSID();
+       TSS Tss = TS.getTSS(); //para mensajes
+       TsID.addProc("Lectura");
+       TsID.addProc("Linea");
+       TsID.addVar("N", TIPOINT);
+       TsID.addVar("I", TIPOINT);
+       Tss.add("N=");
+       TsID.addProc("$main");
+       TsID.addVar("J", TIPOINT);
+       
+       Tss.add("*");
+       
+       
+     //Lectura
+       c3.add(OPCODE.ETIQUETA,1);
+       c3.add(OPCODE.OPWRITES,0);
+       c3.add(OPCODE.OPREAD,-2);
+       c3.add(OPCODE.OPASIGNNUM,1,0);
+       c3.add(OPCODE.OPMAY,2,-2,1);
+       c3.add(OPCODE.OPIF0,2,1);
+       c3.add(OPCODE.OPRET);
+       TsID.setCantTmp(0, 2);  //0=posición de lectura, 2=cant de temporales.
+
+        System.out.println(); 
+        
+       ///Linea
+       c3.add(OPCODE.OPASIGNNUM,-3,1);
+       c3.add(OPCODE.ETIQUETA,2);
+       c3.add(OPCODE.OPMEI,1,-3,-2);
+       c3.add(OPCODE.OPIF0,1,3);
+       c3.add(OPCODE.OPWRITES,-1);
+       c3.add(OPCODE.OPINC,-3);
+       c3.add(OPCODE.OPGOTO,2);
+       c3.add(OPCODE.ETIQUETA,3);
+       c3.add(OPCODE.OPNL);
+       c3.add(OPCODE.OPRET);
+       TsID.setCantTmp(1, 1);
+       TsID.setDirC3(1, 17);
+       
+       
+       //Main
+       c3.add(OPCODE.OPCALL,0);
+       c3.add(OPCODE.OPASIGNNUM,-5,1);
+       c3.add(OPCODE.ETIQUETA,4);
+       c3.add(OPCODE.OPMEI,1,-5,-2);
+       c3.add(OPCODE.OPIF0,1,5);
+       c3.add(OPCODE.OPCALL,-1);
+       c3.add(OPCODE.OPINC,-5);
+       c3.add(OPCODE.OPGOTO,4);
+       c3.add(OPCODE.ETIQUETA,5);
+       c3.add(OPCODE.OPRET);
+       TsID.setCantTmp(3, 1);
+       TsID.setDirC3(4, 39);
