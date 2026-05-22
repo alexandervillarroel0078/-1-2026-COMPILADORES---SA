@@ -336,4 +336,65 @@ Ef
  
 ```
 ---
- 
+
+
+
+
+
+
+### 3. (Diagrama de Transiciones)
+Un lenguaje usa Tokens que son formados con solamente Dígitos:
+- NUMP → Números enteros cuya cantidad de dígitos significativos es par
+- NUMI → Números enteros cuya cantidad de dígitos significativos es impar
+
+Dibuje un dt para reconocer a (los nombres de) estos Tokens.
+
+Por "dígito significativo", en este caso, se refiere a que no se tomen en cuenta los ceros a la izquierda del NUM.
+
+**R:**
+### PASO 1 — Clases de caracteres
+```
+| Clase      | Descripción                        |
+|------------|------------------------------------|
+ digito       {1,2,...,n+1}        
+ otro         EOF O separador
+ cero         {0}
+```
+### PASO 2 — Estados (trabajos)
+```
+| Estado | Significado                  | Observación          |
+|--------|------------------------------|----------------------|
+q0 → "no sé nada todavía"
+q1 → "ceros a la izquierda"
+q2    digito par
+q3 digito impar        **R:**
+### PASO 1 — Clases de caracteres
+```
+| Clase      | Descripción                        |
+|------------|------------------------------------|
+ digito       {1,2,...,n+1}        
+ otro         EOF O separador
+ cero         {0}
+```
+### PASO 2 — Estados (trabajos)
+```
+| Estado | Significado                  | Observación          |
+|--------|------------------------------|----------------------|
+q0 → "no sé nada todavía"
+q1 → "ceros a la izquierda"
+q2    digito par
+q3 digito impar            
+
+
+### PASO 4 — Tabla de transición
+
+Estado | cero | dígito | otro
+q0     | q1   | q3     | ERROR
+q1       q1    q3   digimpar
+q2       
+
+
+
+
+
+

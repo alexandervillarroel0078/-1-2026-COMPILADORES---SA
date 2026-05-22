@@ -1,5 +1,6 @@
-
 ## DIAGRAMA DE TRANSICIONES
+
+---
 
 ### 1. (Diagrama de Transiciones)
 Dibujar un dt que, trabajando con Letras y Dígitos, reconozca los siguientes tokens:
@@ -9,63 +10,28 @@ Dibujar un dt que, trabajando con Letras y Dígitos, reconozca los siguientes to
 
 **R:**
 ```
-## R:
-
 ### PASO 1 — Clases de caracteres
 
-| Clase      | Descripción                        |
-|------------|------------------------------------|
-| dígito     | 0-9                                |
-| letraHex   | A\|B\|C\|D\|E\|F                   |
-| 'h'        | la h especial que termina HEX      |
-| letraNoHex | G\|I\|J\|...\|Z (todo excepto h)   |
-| otro       | EOF o separador                    |
-
----
-
+| Clase      | Descripción                      |
+|------------|----------------------------------|
+| dígito     | 0-9                              |
+| letraHex   | A\|B\|C\|D\|E\|F                 |
+| 'h'        | la h especial que termina HEX    |
+| letraNoHex | G\|I\|J\|...\|Z (todo excepto h) |
+| otro       | EOF o separador                  |
+ 
 ### PASO 2 — Estados (trabajos)
-
-| Estado | Significado                  | Observación          |
-|--------|------------------------------|----------------------|
-| q0     | "no sé nada todavía"         | inicio               |
-| q1     | "llevo solo dígitos"         | puede ser NUM o HEX  |
-| q2     | "llevo letras hex (A-F)"     | va camino a HEX      |
-| q3     | "terminé en h"               | confirma HEX         |
-| q4     | "llevo letraNoHex"           | es ID sí o sí        |
-
----
-
-### PASO 3 — 3 preguntas por cada estado
-
-**q0** — "no sé nada":
-1. ¿Me quedo? → nada, soy el inicio
-2. ¿Cambio? → dígito→q1, letraHex→q2, h|letraNoHex→q4
-3. ¿Terminé? → otro → ERROR
-
-**q1** — "llevo solo dígitos":
-1. ¿Me quedo? → dígito → loop
-2. ¿Cambio? → letraHex→q2, h→q3, letraNoHex→q4
-3. ¿Terminé? → otro → NUM✓
-
-**q2** — "llevo letras hex":
-1. ¿Me quedo? → dígito|letraHex → loop
-2. ¿Cambio? → h→q3, letraNoHex→q4
-3. ¿Terminé? → otro → HEX✓
-
-**q3** — "terminé en h":
-1. ¿Me quedo? → nada, h es terminal
-2. ¿Cambio? → cualquier letra|dígito → q4
-3. ¿Terminé? → otro → HEX✓
-
-**q4** — "llevo letraNoHex":
-1. ¿Me quedo? → dígito|letraHex|h|letraNoHex → loop
-2. ¿Cambio? → nada, ya es ID sí o sí
-3. ¿Terminé? → otro → ID✓
-
----
-
+ 
+| Estado | Significado                | Observación         |
+|--------|----------------------------|---------------------|
+| q0     | "no sé nada todavía"       | inicio              |
+| q1     | "llevo solo dígitos"       | puede ser NUM o HEX |
+| q2     | "llevo letras hex (A-F)"   | va camino a HEX     |
+| q3     | "terminé en h"             | confirma HEX        |
+| q4     | "llevo letraNoHex"         | es ID sí o sí       |
+ 
 ### PASO 4 — Tabla de transición
-
+ 
 | Estado | dígito | letraHex | 'h' | letraNoHex | otro  |
 |--------|--------|----------|-----|------------|-------|
 | q0     | q1     | q2       | q4  | q4         | ERROR |
@@ -73,9 +39,7 @@ Dibujar un dt que, trabajando con Letras y Dígitos, reconozca los siguientes to
 | q2     | q2     | q2       | q3  | q4         | HEX✓  |
 | q3     | q4     | q4       | q4  | q4         | HEX✓  |
 | q4     | q4     | q4       | q4  | q4         | ID✓   |
-
 ```
-
 ---
 
 ### 2. (Diagrama de Transiciones)
@@ -85,10 +49,38 @@ Un lenguaje usa Tokens que son formados con solamente Dígitos y Letras. Estos s
 - NUMLET → Empieza con Digito(s) y termina con Letra(s).
 - ID → (ninguno de los anteriores).
 
-Dibuje un Diagrama de Transiciones, para reconocer a (los nombres de) estos Tokens.
-
 **R:**
+```
+### PASO 1 — Clases de caracteres
 
+| Clase  | Descripción                    |
+|--------|--------------------------------|
+| dígito | 0,1,2,...,9                    |
+| letra  | A,B,C...Z, a,b,c,...,z         |
+| otro   | EOF o separador                |
+ 
+### PASO 2 — Estados (trabajos)
+ 
+| Estado | Significado                              | Observación          |
+|--------|------------------------------------------|----------------------|
+| q0     | "no sé nada todavía"                     | inicio               |
+| q1     | "llevo solo dígitos"                     | puede ser NUM o NUMLET |
+| q2     | "llevo solo letras"                      | puede ser LETNUM     |
+| q3     | "empecé con dígitos, vi letra"           | va camino a NUMLET   |
+| q4     | "empecé con letras, vi dígito"           | va camino a LETNUM   |
+| q5     | "alterné más de una vez"                 | es ID sí o sí        |
+ 
+### PASO 4 — Tabla de transición
+ 
+| Estado | letra | dígito | otro    |
+|--------|-------|--------|---------|
+| q0     | q2    | q1     | ERROR   |
+| q1     | q3    | q1     | NUM✓    |
+| q2     | q2    | q4     | ID✓     |
+| q3     | q3    | q5     | NUMLET✓ |
+| q4     | q5    | q4     | LETNUM✓ |
+| q5     | q5    | q5     | ID✓     |
+```
 ---
 
 ### 3. (Diagrama de Transiciones)
@@ -96,37 +88,82 @@ Un lenguaje usa Tokens que son formados con solamente Dígitos:
 - NUMP → Números enteros cuya cantidad de dígitos significativos es par
 - NUMI → Números enteros cuya cantidad de dígitos significativos es impar
 
-Dibuje un dt para reconocer a (los nombres de) estos Tokens.
-
-Por "dígito significativo", en este caso, se refiere a que no se tomen en cuenta los ceros a la izquierda del NUM.
+Por "dígito significativo" se refiere a que no se tomen en cuenta los ceros a la izquierda.
 
 **R:**
+```
+### PASO 1 — Clases de caracteres
 
+| Clase  | Descripción     |
+|--------|-----------------|
+| dígito | 1,2,...,9       |
+| cero   | 0               |
+| otro   | EOF o separador |
+ 
+### PASO 2 — Estados (trabajos)
+ 
+| Estado | Significado                        |
+|--------|------------------------------------|
+| q0     | "no sé nada todavía"               |
+| q1     | "ceros a la izquierda"             |
+| q2     | "llevo cantidad PAR de dígitos significativos"  |
+| q3     | "llevo cantidad IMPAR de dígitos significativos"|
+ 
+### PASO 4 — Tabla de transición
+ 
+| Estado | cero | dígito | otro  |
+|--------|------|--------|-------|
+| q0     | q1   | q3     | ERROR |
+| q1     | q1   | q3     | ERROR |
+| q2     | q3   | q3     | NUMP✓ |
+| q3     | q2   | q2     | NUMI✓ |
+```
 ---
 
 ### 4. (Diagrama de Transiciones)
 Un lenguaje usa Tokens que son formados con solamente Dígitos y Letras. Estos son:
-- NUMO → Números octales, los cuales pueden terminar con la vocal 'O'. Recuerde que los octales solo usan los dígitos 0 al 7.
-- NUM → Números enteros que no son un NUMO. Opcionalmente pueden terminar en la letra 'd'.
+- NUMO → Números octales, pueden terminar con la vocal 'O'.
+- NUM → Números enteros que no son NUMO. Opcionalmente pueden terminar en 'd'.
 - ID → combinación de letras y/o dígitos que no son NUM ni NUMO (debe tener al menos una letra)
 
-Dibuje un dt para reconocer a (los nombres de) estos Tokens.
-
-Lexemas de ejemplo:
-```
-23456  → NUMO (porque solo usa dígitos octales)
-23456d → NUM  (porque son solo dígitos y termina en 'd')
-78695  → NUM  (son solo dígitos y usa dígitos no-octales)
-7563O  → NUMO (solo usa dígitos octales y termina en 'O')
-854O   → ID   (al utilizar el 8 ya deja de ser octal)
-o1234  → ID   (empieza con letra. No es NUMO ni NUM)
-345dd  → ID
-AB2C   → ID
-```
-
 **R:**
+```
+### PASO 1 — Clases de caracteres
 
+| Clase     | Descripción              |
+|-----------|--------------------------|
+| octal     | 0-7                      |
+| noOctal   | 8\|9                     |
+| 'O'       | letra O especial         |
+| 'd'       | letra d especial         |
+| otraLetra | A-Z excepto O y d        |
+| otro      | EOF o separador          |
+ 
+### PASO 2 — Estados (trabajos)
+ 
+| Estado | Significado                              |
+|--------|------------------------------------------|
+| q0     | "no sé nada"                             |
+| q1     | "llevo solo octales" → puede ser NUMO o NUM |
+| q2     | "llevo dígito no octal" → solo NUM       |
+| q3     | "terminé en O" → confirma NUMO           |
+| q4     | "terminé en d" → confirma NUM            |
+| q5     | "llevo letra" → va camino a ID           |
+
+### PASO 4 — Tabla de transición
+ 
+| Estado | octal | noOctal | 'O' | 'd' | otraLetra | otro  |
+|--------|-------|---------|-----|-----|-----------|-------|
+| q0     | q1    | q2      | q5  | q5  | q5        | ERROR |
+| q1     | q1    | q2      | q3  | q4  | q5        | NUMO✓ |
+| q2     | q2    | q2      | q5  | q4  | q5        | NUM✓  |
+| q3     | q5    | q5      | q5  | q5  | q5        | NUMO✓ |
+| q4     | q5    | q5      | q5  | q5  | q5        | NUM✓  |
+| q5     | q5    | q5      | q5  | q5  | q5        | ID✓   |
+```
 ---
+
+ 
 
 ### 5. (Diagrama de Transiciones)
 Un lenguaje usa Tokens que son formados con solamente Dígitos y Letras:
@@ -148,7 +185,37 @@ Z     → ID
 /* Alternación estricta: Letra Digito Letra Digito … o Digito Letra Digito Letra … */
 
 **R:**
+```
+### PASO 1 — Clases de caracteres
 
+| Clase  | Descripción     |
+|--------|-----------------|
+| letra  | A-Z, a-z        |
+| dígito | 0-9             |
+| otro   | EOF o separador |
+
+### PASO 2 — Estados (trabajos)
+
+| Estado | Significado                                        |
+|--------|----------------------------------------------------|
+| q0     | "no sé nada"                                       |
+| q1     | "llevo solo dígitos" → puede ser NUM               |
+| q2     | "llevo solo letras" → puede ser ID                 |
+| q3     | "alternando: último fue dígito, empecé con letra"  |
+| q4     | "alternando: último fue letra, empecé con dígito"  |
+| q5     | "rompí alternación" → es ID sí o sí                |
+
+### PASO 4 — Tabla de transición
+
+| Estado | letra | dígito | otro   |
+|--------|-------|--------|--------|
+| q0     | q2    | q1     | ERROR  |
+| q1     | q4    | q1     | NUM✓   |
+| q2     | q2    | q3     | ID✓    |
+| q3     | q3    | q5     | IDNUM✓ |
+| q4     | q5    | q4     | IDNUM✓ |
+| q5     | q5    | q5     | ID✓    |
+```
 ---
 
 ### 6. (Diagrama de Transiciones)
@@ -157,10 +224,37 @@ Un lenguaje toma como tokens a toda subsecuencia formada con solo Letras. Estos 
 - IDA → Es 'A' o, termina en 'A' pero el anterior char no es 'B'.
 - ID → subsecuencia de Letras que no es IDBA ni IDA.
 
-Dibuje un dt para reconocer a (los nombres de) estos Tokens.
-
 **R:**
+```
+### PASO 1 — Clases de caracteres
 
+| Clase     | Descripción               |
+|-----------|---------------------------|
+| 'A'       | letra A especial          |
+| 'B'       | letra B especial          |
+| otraLetra | C-Z (todo excepto A y B)  |
+| otro      | EOF o separador           |
+
+### PASO 2 — Estados (trabajos)
+
+| Estado | Significado                              |
+|--------|------------------------------------------|
+| q0     | "no sé nada"                             |
+| q1     | "último char fue otraLetra"              |
+| q2     | "último char fue 'B'"                    |
+| q3     | "último char fue 'A' sin B antes"        |
+| q4     | "último char fue 'BA'"                   |
+
+### PASO 4 — Tabla de transición
+
+| Estado | 'A' | 'B' | otraLetra | otro  |
+|--------|-----|-----|-----------|-------|
+| q0     | q3  | q2  | q1        | ERROR |
+| q1     | q3  | q2  | q1        | ID✓   |
+| q2     | q4  | q2  | q1        | ID✓   |
+| q3     | q3  | q2  | q1        | IDA✓  |
+| q4     | q3  | q2  | q1        | IDBA✓ |
+```
 ---
 
 ### 7. (Diagrama de Transiciones)
@@ -179,7 +273,41 @@ Ejemplos: 0.47, .47, 37.0, 37., 60.00, 223.876
 Dibuje un dt, para reconocer a estos Tokens.
 
 **R:**
+```
+### PASO 1 — Clases de caracteres
 
+| Clase  | Descripción        |
+|--------|--------------------|
+| dígito | 0-9                |
+| '.'    | punto especial     |
+| 'F'    | letra F especial   |
+| letra  | A-Z excepto F      |
+| otro   | EOF o separador    |
+
+### PASO 2 — Estados (trabajos)
+
+| Estado | Significado                                        |
+|--------|----------------------------------------------------|
+| q0     | "no sé nada"                                       |
+| q1     | "llevo solo dígitos" → puede ser NUM               |
+| q2     | "vi punto después de dígitos" → parte decimal      |
+| q3     | "vi punto al inicio" → esperando dígitos           |
+| q4     | "llevo dígitos después del punto" → FLOAT o DOUBLE |
+| q5     | "llevo letra" → va camino a ID                     |
+| q6     | "terminé en F" → confirma FLOAT                    |
+
+### PASO 4 — Tabla de transición
+
+| Estado | dígito | '.'   | 'F'   | letra | otro    |
+|--------|--------|-------|-------|-------|---------|
+| q0     | q1     | q3    | q5    | q5    | ERROR   |
+| q1     | q1     | q2    | q5    | q5    | NUM✓    |
+| q2     | q4     | ERROR | q5    | q5    | DOUBLE✓ |
+| q3     | q4     | ERROR | ERROR | ERROR | ERROR   |
+| q4     | q4     | ERROR | q6    | q5    | DOUBLE✓ |
+| q5     | q5     | ERROR | q5    | q5    | ID✓     |
+| q6     | q5     | ERROR | q5    | q5    | FLOAT✓  |
+```
 ---
 
 ### 8. (Aplicación de los dt)
