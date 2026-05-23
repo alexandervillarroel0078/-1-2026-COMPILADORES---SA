@@ -308,6 +308,52 @@ Dibuje un dt, para reconocer a estos Tokens.
 | q5     | q5     | ERROR | q5    | q5    | ID✓     |
 | q6     | q5     | ERROR | q5    | q5    | FLOAT✓  |
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ---
 
 ### 8. (Aplicación de los dt)
@@ -316,7 +362,30 @@ Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, di
 Se considera palabra a toda subsecuencia que no tiene Espacios ni EOF.
 
 **R:**
+```
+### PASO 0 — Variables
+int cp = 0
 
+### PASO 1 — Clases de caracteres
+| Clase   | Descripción         |
+|---------|---------------------|
+| espacio | espacio o separador |
+| EOF     | fin de cinta        |
+| otro    | cualquier otro char |
+
+### PASO 2 — Estados (trabajos)
+| Estado | Significado                        |
+|--------|------------------------------------|
+| q0     | "estoy entre palabras o al inicio" |
+| q1     | "estoy dentro de una palabra"      |
+| q2     | "llegué a EOF" → estado final      |
+
+### PASO 4 — Tabla de transición
+| Estado | espacio | otro    | EOF          |
+|--------|---------|---------|--------------|
+| q0     | q0      | q1 cp++ | q2 return cp |
+| q1     | q0      | q1      | q2 return cp |
+```
 ---
 
 ### 9. (Aplicación de los dt)
@@ -327,7 +396,46 @@ Si la Cinta no tiene ninguna palabra, su dt devolverá "" (cadena vacía).
 Por comodidad, asuma que todas las palabras (si existen) tienen diferente longitud.
 
 **R:**
+```
+### PASO 0 — Variables
+string actual = ""
+string mejor  = ""
+int longActual = 0
+int longMejor  = 0
 
+### PASO 1 — Clases de caracteres
+| Clase | Descripción     |
+|-------|-----------------|
+| letra | A-Z, a-z        |
+| otro  | todo lo demás   |
+| EOF   | fin de cinta    |
+
+### PASO 2 — Estados
+| Estado | Significado                |
+|--------|----------------------------|
+| q0     | "fuera de palabra"         |
+| q1     | "dentro de palabra"        |
+| q2     | "llegué a EOF" → final     |
+
+### PASO 3 — Ejemplos
+Cinta: "hi mundo EOF"  → devuelve "mundo"
+Cinta: "EOF"           → devuelve ""
+Cinta: "abc EOF"       → devuelve "abc"
+
+### PASO 4 — Tabla de transición
+| Estado | letra | otro | EOF |
+|--------|-------|------|-----|
+| q0     | q1    | q0   | q2  |
+| q1     | q1    | q0   | q2  |
+
+Acciones:
+- q0 --[letra]--> q1 : actual = actual + c;  longActual = 1
+- q1 --[letra]--> q1 : actual = actual + c;  longActual = longActual + 1
+- q1 --[otro] --> q0 : if(longActual > longMejor){ mejor = actual; longMejor = longActual }
+                       actual = "";  longActual = 0
+- q0 --[EOF]  --> q2 : return mejor
+- q1 --[EOF]  --> q2 : if(longActual > longMejor) mejor = actual;  return mejor
+```
 ---
 
 ### 10. (Aplicación de los dt)
@@ -336,6 +444,38 @@ Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, di
 Se considera palabra a toda subsecuencia que no tiene Espacios ni EOF.
 
 **R:**
+```
+### PASO 0 — Variables
+int cp = 0
+
+### PASO 1 — Clases de caracteres
+| Clase   | Descripción         |
+|---------|---------------------|
+| 'A'     | letra A especial    |
+| espacio | espacio             |
+| EOF     | fin de cinta        |
+| otro    | todo lo demás       |
+
+### PASO 2 — Estados
+| Estado | Significado                        |
+|--------|------------------------------------|
+| q0     | fuera de palabra                   |
+| q1     | dentro de palabra que empieza con A|
+| q2     | dentro de palabra que NO empieza A |
+| q3     | llegué a EOF → estado final        |
+
+### PASO 3 — Ejemplos
+Cinta: "Aldo casa Ana EOF"  → devuelve 2
+Cinta: "EOF"                → devuelve 0
+Cinta: "hola EOF"           → devuelve 0
+
+### PASO 4 — Tabla de transición
+| Estado | 'A'              | otro | espacio | EOF          |
+|--------|------------------|------|---------|--------------|
+| q0     | q1 / cp = cp + 1 | q2   | q0      | q3 return cp |
+| q1     | q1               | q1   | q0      | q3 return cp |
+| q2     | q2               | q2   | q0      | q3 return cp |
+```
 
 ---
 
@@ -345,6 +485,40 @@ Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, di
 Se considera palabra a toda subsecuencia que no tiene Espacios ni EOF.
 
 **R:**
+```
+### PASO 0 — Variables
+int cp = 0
+
+### PASO 1 — Clases de caracteres
+| Clase   | Descripción         |
+|---------|---------------------|
+| '/'     | barra especial      |
+| espacio | espacio             |
+| EOF     | fin de cinta        |
+| otro    | todo lo demás       |
+
+### PASO 2 — Estados
+| Estado | Significado                                  |
+|--------|----------------------------------------------|
+| q0     | leyendo código normal                        |
+| q1     | vi una '/', puede ser inicio de comentario   |
+| q2     | dentro del comentario, fuera de palabra      |
+| q3     | dentro del comentario, dentro de palabra     |
+| q4     | llegué a EOF → estado final                  |
+
+### PASO 3 — Ejemplos
+Cinta: "int x = 0; // hola mundo EOF"  → devuelve 2
+Cinta: "int x = 0; EOF"                → devuelve 0
+Cinta: "// abc def EOF"                → devuelve 2
+
+### PASO 4 — Tabla de transición
+| Estado | '/'  | espacio | otro             | EOF          |
+|--------|------|---------|------------------|--------------|
+| q0     | q1   | q0      | q0               | q4 return cp |
+| q1     | q2   | q0      | q0               | q4 return cp |
+| q2     | q2   | q2      | q3 / cp = cp + 1 | q4 return cp |
+| q3     | q3   | q2      | q3               | q4 return cp |
+```
 
 ---
 
@@ -354,3 +528,36 @@ Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, di
 Se considera palabra a toda subsecuencia que no tiene Espacios ni EOF.
 
 **R:**
+```
+### PASO 0 — Variables
+int cp = 0
+
+### PASO 1 — Clases de caracteres
+| Clase   | Descripción         |
+|---------|---------------------|
+| espacio | espacio o separador |
+| EOF     | fin de cinta        |
+| otro    | cualquier otro char |
+
+### PASO 2 — Estados
+| Estado | Significado                  |
+|--------|------------------------------|
+| q0     | fuera de palabra             |
+| q1     | dentro de palabra            |
+| q2     | llegué a EOF → estado final  |
+
+### PASO 3 — Ejemplos
+Cinta: "hola mundo EOF"  → devuelve 2
+Cinta: "EOF"             → devuelve 0
+Cinta: "abc EOF"         → devuelve 1
+
+### PASO 4 — Tabla de transición
+| Estado | espacio | otro             | EOF          |
+|--------|---------|------------------|--------------|
+| q0     | q0      | q1 / cp = cp + 1 | q2 return cp |
+| q1     | q0      | q1               | q2 return cp |
+
+Nota: con solo 2 estados activos (q0 y q1) se resuelve todo.
+El tercer estado q2 es únicamente el estado final.
+La restricción de 3 estados no agrega dificultad porque la lógica es simple.
+```
