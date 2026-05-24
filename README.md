@@ -1,2 +1,0 @@
-# INF329
-Compiladores
