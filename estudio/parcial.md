@@ -20,43 +20,21 @@
 Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) estos Tokens..
 
 ```
-AABG  AID
-ADAB  ID
-
-paso 0
-
-
 | Clase      | Descripción                      |
 |------------|----------------------------------|
    letra
    'A'            
    otro      EOF o separador
 
-### PASO 2 — Estados (trabajos) Los que despachan 
- 
-| Estado | Significado                | Observación         |
-|--------|----------------------------|---------------------|
- q0 no se nada todavia 
- q1 solo lleva letra 'A'
- q2 solo llevo letras o a y despacho si es otro
- q3 soy aid 
- q4
- 
-| Estado | letra | 'A' | otro    |
-|--------|-------|--------|---------|
-q0   q3 q1 ERROR
-q1   q3 q2 ID
-q2   q4 q1 AID
-q3   q3 q3 ID
-q4   q4 q4 AID
 
-
+| Estado | letra | 'A'  | otro  |
+|--------|-------|------|-------|
+| q0     | q3    | q1   | error |
+| q1     | q3    | q2   | ID    |
+| q2     | q4    | q1   | AID   |
+| q3     | q3    | q3   | ID    |
+| q4     | q4    | q4   | AID   |
 ```
-
-
-
-
-
 **3.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt que recorra TODA la Cinta y en su único estado final, muestre en consola (print) **la cantidad de palabras** que están **dentro** de los comentarios multilínea de JAVA /* ... */.
 
 Se considera **palabra** a toda subsecuencia que no tiene Espacios ni EOF. Es decir, el Espacio y el EOF son los separadores de las palabras.
@@ -75,24 +53,14 @@ int cp = 0
 | EOF     | fin de cinta       |
 | otro    | todo lo demás      |
 
-### PASO 2 — Estados
-| Estado | Significado                                    |
-|--------|------------------------------------------------|
-| q0     | fuera del comentario                           |
-| q1     | vi '/' fuera del comentario                    |
-| q2     | dentro del comentario, fuera de palabra        |
-| q3     | dentro del comentario, dentro de palabra       |
-| q4     | dentro del comentario, vi '*' (posible cierre) |
-| q5     | final → return cp                              |
-
 ### PASO 4 — Tabla de transición
-| Estado | '/'  | '*' | espacio | otro          | EOF          |
-|--------|------|-----|---------|---------------|--------------|
-| q0     | q1   | q0  | q0      | q0            | q5 return cp |
-| q1     | q0   | q2  | q0      | q0            | q5 return cp |
-| q2     | q3   | q4  | q2      | q3 / cp=cp+1  | q5 return cp |
-| q3     | q3   | q4  | q2      | q3            | q5 return cp |
-| q4     | q0   | q4  | q2      | q3            | q5 return cp |
+| Estado | '/'  | '*'  | espacio | otro         | EOF      |
+|--------|------|------|---------|--------------|----------|
+| q0     | q1   | q0   | q0      | q0           | return cp |
+| q1     | q0   | q2   | q0      | q0           | return cp |
+| q2     | q3   | q4   | q2      | q3 / cp=cp+1 | return cp |
+| q3     | q3   | q4   | q2      | q3           | return cp |
+| q4     | q0   | q4   | q2      | q3           | return cp |
 
 ```
 # PRIMER PARCIAL (R)
@@ -147,26 +115,31 @@ Ef:
 Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) estos Tokens..
 
 ```
-paso 0
-| Clase      | Descripción                      |
-|------------|----------------------------------|
-letra
-'A'
-otro  eof o separador
+## Paso 0 — Clases de entrada
 
-letra*AA    IDA
-letra*A*A   IDA
-letra*A     ID 
-letra*      ID
+| Clase  | Descripción                  |
+|--------|------------------------------|
+| letra  | cualquier letra menos 'A'    |
+| 'A'    | la letra A                   |
+| otro   | EOF o separador              |
 
-### PASO 4 — Tabla de transición
+## Paso 2 — Estados y su significado
+
+| Estado | Descripción                                                        |
+|--------|-------------------------------------------------------------------|
+| q0     | inicial                                                           |
+| q1     | leyendo letras, último char NO es 'A' → candidato ID             |
+| q2     | cantidad de A's consecutivas al final es impar → candidato ID    |
+| q3     | cantidad de A's consecutivas al final es par → candidato IDA     |
+
+## Paso 4 — Tabla de transición
+
 | Estado | letra | 'A' | otro  |
 |--------|-------|-----|-------|
 | q0     | q1    | q2  | ERROR |
-| q1     | q1    | q2  | ID✓   |
-| q2     | q1    | q3  | ID✓   |
-| q3     | q1    | q2  | IDA✓  |
-
+| q1     | q1    | q2  | ID    |
+| q2     | q1    | q3  | ID    |
+| q3     | q1    | q2  | IDA   |
 ```
 
 **3.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt que recorra TODA la Cinta y en su único estado final, muestre en consola (print):
@@ -227,32 +200,24 @@ Si la ExprBoole es true, la Sentencia1 se ejecutará **NUM1** veces; si es false
 
 Tome en cuenta que ExprBoole, Sentencia1 y Sentencia2 generan su propio código-3.
 ```
- t4 = NUM1
- T5 = NUM2
-
-Ei:
- t1 = 0
- t6 = 1
- C3-ExprBoole(tk)
- if (tk=0) GOTO E2
- GOTO E1
-
+t1 = 0
+t2 = NUM1
+t3 = NUM2
+C3-ExprBoole(tk)
+IF (tk=0) GOTO E1
 E2:
- t3 = (t5 > t1)
- if (t3=0) GOTO Ef
- c3-sentencia2
- t5 = t5 - t6
- GOTO E2
-
+    t4 = (t2 > t1)
+    IF (t4=0) GOTO Ef
+    C3-Sentencia1
+    DEC t2
+    GOTO E2
 E1:
- t2 = (t4 > t1)
- if (t2=0) GOTO Ef
- c3-sentencia1
- t4 = t4 - t6
- GOTO E1
-
+    t4 = (t3 > t1)
+    IF (t4=0) GOTO Ef
+    C3-Sentencia2
+    DEC t3
+    GOTO E1
 Ef:
-
 ```
 **2.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt **sin acciones semánticas**, que devuelva:
 
@@ -266,26 +231,17 @@ Se considera palabra a todo substring que no tiene espacios ni EOF.
 |---------|--------------------------------|
 | espacio | separador de palabras          |
 | EOF     | fin de cinta                   |
-| otro    | todo lo demás                  |
+| chat    | todo lo demás                  |
 
 ### PASO 2 — Estados
-| Estado | Significado                                        |
-|--------|----------------------------------------------------|
-| q0     | fuera de palabra, todo bien (ninguna impar aún)    |
-| q1     | dentro de palabra, longitud impar hasta ahora      |
-| q2     | dentro de palabra, longitud par hasta ahora        |
-| q3     | fuera de palabra, ya vi una palabra impar          |
-| q4     | dentro de palabra, longitud impar (después de q3)  |
-| qf     | estado final                                       |
+                                     
 
 ### PASO 4 — Tabla
-| Estado | otro | espacio | EOF             |
-|--------|------|---------|-----------------|
-| q0     | q1   | q0      | qf return true  |
-| q1     | q2   | q3      | qf return false |
-| q2     | q1   | q0      | qf return true  |
-| q3     | q4   | q3      | qf return false |
-| q4     | q3   | q0      | qf return false |
+| Estado | char | espacio         | EOF           |
+|--------|------|-----------------|---------------|
+| q0     | q1   | q0              |  return true  |
+| q1     | q2   | qF return false |  return false |
+| q2     | q1   | q0              |  return true  |
 
 ### PASO 3 — Ejemplos
 "AB CD EOF"   → 2 palabras de longitud 2 → true
@@ -361,7 +317,21 @@ Dibuje un dt, sin acciones semánticas, para reconocer a (los nombres de) estos 
 Si la ExprBoole es true, la Sentencia1 se ejecutará **una vez**; si es false, se ejecuta la Sentencia2 **dos veces (twice)**.
 
 Tome en cuenta que ExprBoole, Sentencia1 y Sentencia2 generan su propio código-3.
-
+```
+i = 2
+t1 = 0
+C3-ExprBoole(tk)
+IF (tk=0) GOTO E1
+C3-Sentencia1
+GOTO Ef
+E1:
+    t2 = (i = t1)
+    IF (t2=1) GOTO Ef
+    C3-Sentencia2
+    DEC i
+    GOTO E1
+Ef:
+```
 **2.** *(Aplicación de los dt)* En una variable global int X, se almacena un número mayor que cero.
 
 Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt, que recorra las celdas necesarias y devuelva en su único estado final, la X-ésima palabra que hay en la cinta. Si tal palabra no existe, devolver la cadena vacía.
@@ -413,20 +383,22 @@ Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) es
 ### PASO 2 — Estados
 | Estado | Significado                          |
 |--------|--------------------------------------|
-| q0     | no sé nada                           |
-| q1     | llevo solo dígitos, último PAR        |
-| q2     | llevo solo dígitos, último IMPAR      |
-| q3     | llevo letras/dígitos, último NO vocal |
-| q4     | último char fue vocal                 |
+q0 → inicial
+q1 → leyendo solo dígitos (podría ser NUMP o NUMI)
+q2 → último dígito par (candidato NUMP)
+q3 → último dígito impar (candidato NUMI)
+q4 → leyendo letras/dígitos mezclados o solo letras (candidato ID o IDV)
+q5 → último carácter fue vocal (candidato IDV)              |
 
 ### PASO 4 — Tabla
-| Estado | parDig | imDig | vocal | letra | otro   |
-|--------|--------|-------|-------|-------|--------|
-| q0     | q1     | q2    | q4    | q3    | ERROR  |
-| q1     | q1     | q2    | q4    | q3    | NUMP✓  |
-| q2     | q1     | q2    | q4    | q3    | NUMI✓  |
-| q3     | q3     | q3    | q4    | q3    | ID✓    |
-| q4     | q3     | q3    | q4    | q3    | IDV✓   |
+| Estado | díg par | díg impar | vocal | consonante | otro (retract) |
+|--------|---------|-----------|-------|------------|----------------|
+| q0     | q1      | q2        | q3    | q3         | error          |
+| q1     | q1      | q2        | q3    | q3         | return NUMP    |
+| q2     | q1      | q2        | q3    | q3         | return NUMI    |
+| q3     | q5      | q5        | q4    | q5         | return ID      |
+| q4     | q5      | q5        | q4    | q5         | return IDV     |
+| q5     | q5      | q5        | q4    | q5         | return ID      |
 ```
 ---
 
@@ -446,7 +418,27 @@ Pero, si el número de **pasada es par** (2da, 4ta, 6ta, ...), la **Sentencia NO
 Obviamente, cuando el número de pasada es impar, la Sentencia es ejecutada.
 
 Recuerde que ExprBoole, y Sentencia generan su propio C3.
+```
+ t1 = 1 
+ t2 = 2
+ t3 = 0
+Ei:
+ c3-exprBoole(tk)
+ if (tk=0) goto Ef
 
+ t4 = (t1 MOD t2)
+ t5 = (t4 = t3)
+ if (t5=1) goto E2
+ c3-sentencia1
+ inc t1
+ goto Ei
+
+E2:
+ inc t1
+ goto Ei
+
+Ef:
+```
 **2.** *(Diagrama de Transiciones)* Un lenguaje usa Tokens que son formados con **solamente** Dígitos y Letras. Estos son:
 
 - **NUM** → números enteros
@@ -482,6 +474,16 @@ Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) es
 "a1"    → IDNUM ✓
 "y1"    → IDNUM ✓
 "y"     → ID ✓
+
+
+| Estado | dígito | 'y' | 'z' | letra | otro/EOF (retract) |
+|--------|--------|-----|-----|------------|-------------------|
+| q0     | q1     | q2  | q4  | q4         | error             |
+| q1     | q1     | q5  | q5  | q5         | return NUM        |
+| q2     | q5     | q4  | q3  | q4         | return ID         |
+| q3     | q5     | q4  | q4  | q4         | return YZ         |
+| q4     | q5     | q4  | q4  | q4         | return ID         |
+| q5     | q5     | q5  | q5  | q5         | return IDNUM      |
 
 ### PASO 4 — Tabla
 | Estado | 'y' | 'z' | letra | dígito | otro   |
@@ -530,7 +532,58 @@ Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) es
 | q4     | q4   | q2   | q2   | q0    |
 ```
 ---
+# PRIMER PARCIAL
+## INF329 SA–COMPILADORES. GESTIÓN 2-2024
+### Vie 01 de noviembre de 2024
 
+**1.** *(Esquema de traducción)* Escriba un esquema de traducción C3 para la construcción ficticia:
+
+    repeat NUM{
+        Sentencia;
+    }until(ExprBoole)
+
+Este bucle repite la Sentencia, NUM veces. Pero en cada pasada, luego de ejecutar la Sentencia, consulta el valor de la ExprBoole: Si es true, el bucle finaliza; si es false, continúa.
+
+En otras palabras, este bucle finaliza luego de ejecutar NUM veces la Sentencia o cuando la ExprBoole es true.
+
+Recuerde que ExprBoole, y Sentencia generan su propio C3.
+```
+Ei:
+ c3-sentencia
+ dec NUM
+ c3-exprBoole(tk)
+ if (tk=1) goto Ef
+
+ t1 = 0
+ t2 = (NUM = t1)
+ if (t2=1) goto Ef
+ goto Ei
+
+Ef:
+```
+**2.** *(Diagrama de Transiciones)* Un lenguaje forma sus tokens con solamente Dígitos y Letras. Estos son:
+
+- **PNUM** → números enteros que tienen una cantidad par de Dígitos.
+- **INUM** → números enteros que tienen una cantidad impar de Dígitos.
+- **ID** → combinación de letras y dígitos (debe tener al menos una letra).
+
+Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) estos Tokens.
+```
+| Estado | dígito | letra | otro/EOF (retract) |
+|--------|--------|-------|--------------------|
+| q0     | q1     | q3    | error              |
+| q1     | q2     | q3    | return INUM        |
+| q2     | q1     | q3    | return PNUM        |
+| q3     | q3     | q3    | return ID          |
+
+```
+**3.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt, que recorra toda la Cinta y devuelva en su estado final, el NUM de mayor valor. Si no existen NUM's en la Cinta, devolver –1.
+
+Como se sabe, un NUM es una palabra formada con solamente Dígitos. Recuerde que las palabras en la Cinta, se separan con Espacios o con el EOF.
+
+Para convertir un String a entero, use la función toInt. Por ejemplo,
+
+    int x=toInt(ac); //ac es un String.
 # PRIMER PARCIAL
 ## INF329 SA COMPILADORES. GESTIÓN 1-2025
 ### Jue 30 de mayo de 2025
@@ -546,7 +599,21 @@ Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) es
     print(S);
 
 Puesto que en este fragmento de código hay un loop-forever, usted deberá hacer lo mismo en su código-3 equivalente. También haga uso, con total libertad, de las variables enteras Dato y S.
+```
+ t1 = 0
+ t2 = 100
+Ei:
+ read(dato)
+ t3 = (dato < t1)
+ t4 = (dato > t2)
+ t5 = (t3 or t4)
+ if (t5=1) goto Ef
+ s = s + dato
+ goto Ei
 
+Ef
+ write(S)
+```
 **2.** *(Diagrama de Transiciones)* Un lenguaje usa Tokens que son formados con **solamente** Dígitos y Letras. Estos son:
 
 - **NUM** → números enteros
@@ -584,14 +651,15 @@ Note que todo substring compuesto por Letras y/o Dígitos forma un token.
 "a"     → ID ✓
 
 ### PASO 4 — Tabla
-| Estado | letra | dígito | otro   |
-|--------|-------|--------|--------|
-| q0     | q2    | q1     | ERROR  |
-| q1     | q3    | q1     | NUM✓   |
-| q2     | q2    | q4     | ID✓    |
-| q3     | q5    | q3     | IDUM✓  |
-| q4     | q4    | q5     | IDUM✓  |
-| q5     | q5    | q5     | ID✓    |
+| Estado | dígito | letra | otro/EOF (retract) |
+|--------|--------|-------|--------------------|
+| q0     | q1     | q2    | error              |
+| q1     | q1     | q4    | return NUM         |
+| q2     | q3     | q6    | return ID          |
+| q3     | q5     | q2    | return IDUM        |
+| q4     | q1     | q3    | return IDUM        |
+| q5     | q5     | q5    | return ID          |
+| q6     | q3     | q6    | return ID          |
 ```
 **3.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt, que recorra **todas** las celdas, y devuelva la cantidad de palabras dentro de paréntesis que hay en la Cinta.
 
@@ -631,7 +699,57 @@ int cp = 0
 | q2     | q1   | q0   | q1      | q2               | qf return cp |
 ```
 ---
+# PRIMER PARCIAL
+## INF329 SA–COMPILADORES. GESTIÓN 2-2024
+### Vie 01 de noviembre de 2024
 
+**1.** *(Esquema de traducción)* Escriba un esquema de traducción C3 para la construcción ficticia:
+
+    repeat NUM{
+        Sentencia;
+    }until(ExprBoole)
+
+Este bucle repite la Sentencia, NUM veces. Pero en cada pasada, luego de ejecutar la Sentencia, consulta el valor de la ExprBoole: Si es true, el bucle finaliza; si es false, continúa.
+
+En otras palabras, este bucle finaliza luego de ejecutar NUM veces la Sentencia o cuando la ExprBoole es true.
+
+Recuerde que ExprBoole, y Sentencia generan su propio C3.
+```
+Ei:
+ c3-sentencia
+ dec NUM
+ c3-exprBoole(tk)
+ if (tk=1) goto Ef
+
+ t1 = 0
+ t2 = (NUM = t1)
+ if (t2=1) goto Ef
+ goto Ei
+
+Ef:
+```
+**2.** *(Diagrama de Transiciones)* Un lenguaje forma sus tokens con solamente Dígitos y Letras. Estos son:
+
+- **PNUM** → números enteros que tienen una cantidad par de Dígitos.
+- **INUM** → números enteros que tienen una cantidad impar de Dígitos.
+- **ID** → combinación de letras y dígitos (debe tener al menos una letra).
+
+Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) estos Tokens.
+```
+| Estado | dígito | letra | otro/EOF (retract) |
+|--------|--------|-------|--------------------|
+| q0     | q1     | q3    | error              |
+| q1     | q2     | q3    | return INUM        |
+| q2     | q1     | q3    | return PNUM        |
+| q3     | q3     | q3    | return ID          |
+```
+**3.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt, que recorra toda la Cinta y devuelva en su estado final, el NUM de mayor valor. Si no existen NUM's en la Cinta, devolver –1.
+
+Como se sabe, un NUM es una palabra formada con solamente Dígitos. Recuerde que las palabras en la Cinta, se separan con Espacios o con el EOF.
+
+Para convertir un String a entero, use la función toInt. Por ejemplo,
+
+    int x=toInt(ac); //ac es un String.
 # PRIMER PARCIAL (R)
 ## INF329 SA COMPILADORES. GESTIÓN 1-2025
 ### Sáb 14 de junio de 2025
@@ -647,7 +765,9 @@ int cp = 0
 Este es casi un while normal. Este ciclo se ejecuta hasta que la ExprBoole es false o ya se hayan ejecutado NUM ciclos.
 
 Tome en cuenta que ExprBoole y Sentencia generan su propio C3.
+```
 
+```
 **2.** *(Aplicación de los dt)* Asumiendo que el cabezal de la Cinta de Caracteres está en la primera celda, dibuje un dt, que recorra todas las celdas y devuelva la cantidad de palabras formadas con solo letras que empiezan con 'A' y terminan en 'Z'.
 ```
 ### PASO 0 — Variables

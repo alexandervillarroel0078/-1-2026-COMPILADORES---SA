@@ -1,0 +1,453 @@
+
+
+## 14. Teoría: Analizador Léxico y Diagramas de Transiciones
+
+---
+
+### ¿Qué es el Analizador Léxico?
+
+- Es la **primera fase** del compilador (también llamado Scanner, Lexer o Analex).
+- Lee el Programa Fuente **char a char**.
+- Agrupa caracteres consecutivos en **tokens**.
+- Envía los tokens **uno por uno** al Parser (Analizador Sintáctico).
+- Es considerada la **fase más lenta** del compilador (por leer char a char).
+- **NO verifica el orden** de los tokens, solo los reconoce.
+- Si el fuente es erróneo, igual reconoce tokens sin comunicar error.
+
+**Tareas adicionales del Analex:**
+- Ignorar los **comentarios** del Programa Fuente.
+- Instalar (insertar) las **StringCtte's e ID's** en la Tabla de Símbolos.
+
+---
+
+### Conceptos clave: Token, Lexema y Patrón
+
+| Concepto | Definición | Ejemplo |
+|---|---|---|
+| **Token** | Categoría o tipo al que pertenece un símbolo | `NUM`, `ID`, `ASSIGN`, `IF` |
+| **Lexema** | La cadena concreta que fue reconocida | `640`, `Velocidad`, `:=`, `if` |
+| **Patrón** | Regla que describe qué lexemas pertenecen a un token | `NUM` = uno o más dígitos |
+
+> Un **token** es como una clase, el **lexema** es una instancia de esa clase.
+
+**Ejemplo:**
+```
+F = "x := 640 * Velocidad – 456;"
+
+x          →  ID
+:=         →  ASSIGN
+640        →  NUM
+*          →  POR
+Velocidad  →  ID
+–          →  MENOS
+456        →  NUM
+;          →  PTOCOMA
+```
+
+---
+
+### Tipos de errores por fase del compilador
+
+| Fase | Tipo de error que detecta | Ejemplo |
+|---|---|---|
+| **Léxico** | Carácter que no pertenece al alfabeto del lenguaje | `@`, `#` en un lenguaje que no los define |
+| **Sintáctico** | Token en posición incorrecta | `int x = ;` |
+| **Semántico** | Tipos incompatibles, variables no declaradas | `int x = 1 + "hola"` → Type mismatch |
+
+> **Error léxico:** ocurre cuando el Analex encuentra un carácter (o secuencia) que no puede asociar a ningún token definido en el lenguaje.
+
+---
+
+### ¿Qué es un Diagrama de Transiciones (DT)?
+
+Un **Diagrama de Transiciones** es un grafo dirigido que modela el comportamiento del Analizador Léxico para reconocer tokens. Es equivalente a un **Autómata Finito**.
+
+**Componentes:**
+
+| Componente | Descripción | Notación gráfica |
+|---|---|---|
+| **Estado** | Situación en la que se encuentra el reconocedor | Círculo `○` |
+| **Estado inicial** | Donde empieza el reconocedor | Círculo con flecha entrante `→○` |
+| **Estado final** | El token fue reconocido exitosamente | Círculo doble `⊙` |
+| **Estado de error** | Secuencia inválida | Estado `E` o trampa |
+| **Transición** | Cambio de estado al leer un carácter | Flecha etiquetada con el char |
+
+---
+
+### Retroceso del cabezal (Retract)
+
+Cuando el DT llega a un estado final, a veces ya leyó **un carácter de más** (el que hizo que se detuviera). En ese caso debe **retroceder** el cabezal una posición.
+
+- Se indica con un `*` en el estado final, o con la notación **retract** / **ret**.
+- Significa: "este carácter no pertenece al token actual, devolvélo a la cinta".
+
+```
+; Ejemplo: reconocer NUM (dígitos)
+; Al leer el primer no-dígito sabemos que el NUM terminó,
+; pero ese char no-dígito pertenece al siguiente token → retract
+
+Estado 0 --dígito--> Estado 1 --dígito--> Estado 1 --no-dígito--> Estado 2*
+                                                                   (final, retract)
+```
+
+---
+
+### Convenciones de notación en los DT
+
+```
+Letra        → cualquier letra del alfabeto (a-z, A-Z)
+Dígito       → 0-9
+otro / other → cualquier carácter que no está en las demás transiciones
+EOF          → fin de archivo
+ε            → transición vacía (sin consumir carácter)
+*            → estado final con retroceso del cabezal
+```
+
+---
+
+### Estructura general de un DT
+
+```
+        char1          char2
+  q0 ---------> q1 ---------> q2 (final)
+  |
+  | otro
+  v
+  qE (error)
+```
+
+- Desde el **estado inicial** `q0` se leen caracteres.
+- Cada carácter lleva a un nuevo estado.
+- Al llegar a un **estado final** se retorna el token reconocido.
+- Si no hay transición válida → **error léxico**.
+
+---
+
+### Plantillas base de DT más comunes
+
+#### NUM → uno o más dígitos
+
+```
+        dígito        dígito         otro
+  q0 ----------> q1 ----------> q1 --------> q2* (retract, return NUM)
+```
+
+> `q1` tiene un lazo con `dígito` (se queda en q1 mientras siga leyendo dígitos).
+
+#### ID → empieza con letra, continúa con letras o dígitos
+
+```
+        letra       letra|dígito        otro
+  q0 --------> q1 --------------> q1 --------> q2* (retract, return ID)
+```
+
+#### Palabra reservada vs ID
+
+El DT reconoce todo como ID, luego se consulta la **Tabla de Símbolos** para ver si es una palabra reservada (`if`, `while`, `for`...).
+
+---
+
+### Cómo diseñar un DT paso a paso
+
+1. **Leer bien la definición** de cada token.
+2. **Identificar el primer carácter** que distingue cada token → eso define las primeras transiciones desde `q0`.
+3. **Trazar el camino feliz** (el caso válido).
+4. **Agregar lazos** donde el mismo tipo de carácter puede repetirse.
+5. **Cerrar con estado final** cuando ya se reconoció el token.
+6. **Decidir si hay retract** (¿el último carácter leído pertenece al token o no?).
+7. **Agregar transiciones de error** para caracteres no esperados.
+
+---
+
+### Ejemplo completo: NUM, ID y operadores simples
+
+```
+Tokens: NUM (dígitos), ID (letra seguida de letra|dígito), PLUS (+), ASSIGN (=)
+
+Desde q0:
+  - dígito  → q1 (reconociendo NUM)
+  - letra   → q2 (reconociendo ID)
+  - '+'     → q5 (final, return PLUS)
+  - '='     → q6 (final, return ASSIGN)
+  - otro    → qE (error léxico)
+
+Desde q1:
+  - dígito  → q1 (lazo, sigue el NUM)
+  - otro    → q3* (final con retract, return NUM)
+
+Desde q2:
+  - letra|dígito → q2 (lazo, sigue el ID)
+  - otro         → q4* (final con retract, return ID)
+```
+
+---
+
+### DT como aplicación: recorrer una cinta
+
+Algunos ejercicios no piden reconocer tokens sino **recorrer toda la cinta** y contar o procesar algo. En ese caso el DT funciona como un programa completo:
+
+- Tiene un **estado contador** o variable acumuladora.
+- Recorre hasta encontrar **EOF**.
+- El estado final devuelve el resultado acumulado.
+
+#### Ejemplo: contar palabras en la cinta
+
+```
+; Palabra = subsecuencia sin espacios ni EOF
+
+Variables: contador = 0
+
+Desde q0 (fuera de palabra):
+  - espacio/EOF → q0 (lazo, sigue buscando)
+  - otro char   → q1 (entró a una palabra), contador++
+
+Desde q1 (dentro de una palabra):
+  - no-espacio y no-EOF → q1 (lazo, sigue la palabra)
+  - espacio             → q0 (terminó la palabra)
+  - EOF                 → q2 (final, return contador)
+```
+
+#### Ejemplo: contar palabras que empiezan con 'A'
+
+```
+Variables: contador = 0
+
+Desde q0 (fuera de palabra):
+  - espacio/EOF → q0
+  - 'A'         → q1, contador++   (entró palabra con A)
+  - otra letra  → q2               (entró palabra sin A)
+
+Desde q1 (dentro de palabra que empezó con A):
+  - no-espacio y no-EOF → q1
+  - espacio             → q0
+  - EOF                 → qF (return contador)
+
+Desde q2 (dentro de palabra que NO empezó con A):
+  - no-espacio y no-EOF → q2
+  - espacio             → q0
+  - EOF                 → qF (return contador)
+```
+
+---
+
+### Reglas importantes para los ejercicios de DT
+
+- **Un estado final por token** reconocido (o uno compartido con retract).
+- **Nunca dos tokens se reconocen en el mismo estado final** sin distinción.
+- Si un lexema puede ser de dos tipos (ej: `123h` es HEX pero `123` es NUM), el DT debe **diferir la decisión** hasta leer suficientes caracteres.
+- El **orden de prioridad** importa: si una cadena puede ser HEX o NUM, el DT debe reconocer primero el más específico (HEX).
+- Los estados con `*` (retract) devuelven el último carácter a la cinta antes de retornar el token.
+
+---
+
+### Resumen: diferencias entre tipos de estados finales
+
+| Tipo | Significado | ¿Consume el último char? |
+|---|---|---|
+| Final normal | El último char leído pertenece al token | Sí |
+| Final con retract (`*`) | El último char NO pertenece al token | No, lo devuelve |
+| Estado error | Carácter inválido, se lanza error léxico | — |
+
+---
+
+### Tokens especiales frecuentes en los ejercicios
+
+| Token | Definición típica |
+|---|---|
+| `NUM` | Uno o más dígitos (`0-9`) |
+| `ID` | Empieza con letra, continúa con letra o dígito |
+| `HEX` | Dígitos hexadecimales (`0-9`, `A-F`), a veces termina en `h` |
+| `FLOAT` | Número con punto decimal, ej: `3.14`, `.5`, `3.` |
+| `IDNUM` | Alternación estricta letra-dígito o dígito-letra |
+| `LETNUM` | Empieza con letras, termina con dígitos |
+| `NUMLET` | Empieza con dígitos, termina con letras |
+
+
+## 15. Teoría adicional: Cinta, Variables en DT y EOF
+
+---
+
+## 15.1 La Cinta de Caracteres (Tape)
+
+La **Cinta de Caracteres** es la estructura de datos que representa el Programa Fuente para el Analizador Léxico.
+
+```
+┌───┬───┬───┬───┬───┬───┬───┬───┬───┐
+│ x │   │ = │   │ 6 │ 4 │ 0 │ ; │EOF│
+└───┴───┴───┴───┴───┴───┴───┴───┴───┘
+  ↑
+cabezal
+```
+
+- Cada celda contiene **un carácter**.
+- El **cabezal** apunta a la celda actual y avanza una posición cada vez que lee.
+- La cinta siempre termina con **EOF** (End Of File).
+- El cabezal **nunca retrocede solo** → solo retrocede si el DT hace un **retract**.
+- El DT recorre la cinta de **izquierda a derecha**, celda por celda.
+
+### Operaciones del cabezal
+
+| Operación | Descripción |
+|---|---|
+| `leer()` | Lee el carácter actual y avanza el cabezal |
+| `retract()` | Retrocede el cabezal una posición (el char no fue consumido) |
+| `EOF` | Carácter especial que indica que no hay más caracteres |
+
+### Ciclo de vida del Analex sobre la cinta
+
+```
+1. Cabezal apunta a la primera celda
+2. El DT empieza en su estado inicial
+3. Lee un char → cambia de estado
+4. Repite hasta llegar a un estado final → retorna el token
+5. El DT vuelve al estado inicial y sigue leyendo
+6. Cuando lee EOF → termina el análisis léxico
+```
+
+---
+
+## 15.2 Variables dentro de un DT
+
+Los DT clásicos solo reconocen si una cadena pertenece o no a un lenguaje. Pero en compiladores, el DT necesita también **acumular información** mientras recorre la cinta.
+
+Las variables se anotan **sobre las transiciones** o en los **estados**, y se actualizan cada vez que el cabezal pasa por ahí.
+
+### Notación usada en el curso
+
+Las acciones se escriben sobre la flecha de transición, debajo del carácter que la dispara:
+
+```
+          char
+  q0 ────────────> q1
+       acción()
+```
+
+### Variables más comunes en los ejercicios
+
+| Variable | Uso típico |
+|---|---|
+| `cnt` / `contador` | Contar palabras, tokens, ocurrencias |
+| `word` / `actual` | Acumular la palabra actual carácter a carácter |
+| `max` | Guardar la palabra o valor máximo encontrado |
+| `len` / `longitud` | Longitud de la palabra actual |
+
+### Ejemplo: contar palabras en la cinta
+
+```
+Variables: cnt = 0
+
+        espacio/EOF          no-espacio, no-EOF
+  q0 ───────────────> q0    
+  q0 ───────────────────────> q1
+                               cnt++
+        no-espacio, no-EOF
+  q1 ───────────────────────> q1
+
+        espacio
+  q1 ───────────────> q0
+
+        EOF
+  q1 ───────────────> qF (return cnt)
+
+        EOF
+  q0 ───────────────> qF (return cnt)
+```
+
+### Ejemplo: acumular la palabra más larga
+
+```
+Variables: actual = "", max = "", len = 0, maxLen = 0
+
+        no-espacio, no-EOF
+  q1 ───────────────────────> q1
+       actual += char
+       len++
+
+        espacio
+  q1 ───────────────> q0
+       if (len > maxLen):
+           max = actual
+           maxLen = len
+       actual = ""
+       len = 0
+```
+
+### Reglas para usar variables en DT
+
+- Las variables se **inicializan antes** de que el DT empiece a correr.
+- Las acciones sobre las transiciones se ejecutan **cada vez** que esa transición se dispara.
+- Las acciones sobre los estados finales se ejecutan **una sola vez** al llegar.
+- Se puede usar cualquier lógica (`if`, asignación, incremento) dentro de las acciones.
+
+---
+
+## 15.3 Manejo de EOF en el DT
+
+### ¿Qué es EOF?
+
+EOF es un carácter especial al final de la cinta que indica que no hay más caracteres. No es un espacio ni un salto de línea, es un símbolo propio.
+
+### Cuándo usar EOF como transición de cierre
+
+EOF se usa como transición de cierre cuando el token **puede terminar al final de la cinta** sin necesidad de un carácter delimitador:
+
+```
+; NUM puede terminar en EOF (no necesita un char extra para saber que terminó)
+
+        dígito        otro / EOF
+  q0 --------> q1 ────────────> q2* (retract si fue otro, return NUM)
+```
+
+### Cuándo EOF es un error
+
+EOF es un error cuando el token **requiere un carácter de cierre** que nunca llegó:
+
+```
+; String literal: empieza con " y debe cerrar con "
+; Si llega EOF antes del cierre → error léxico
+
+        "                char normal            "
+  q0 ──────> q1 ─────────────────────> q1 ──────> q2 (return STRING)
+                                        |
+                                       EOF
+                                        ↓
+                                       qE (ERROR: string no cerrado)
+```
+
+### Tabla resumen: EOF en distintos contextos
+
+| Situación | Comportamiento correcto |
+|---|---|
+| Leyendo NUM y llega EOF | Cerrar el NUM, hacer retract, return NUM |
+| Leyendo ID y llega EOF | Cerrar el ID, hacer retract, return ID |
+| Leyendo STRING y llega EOF | Error léxico (string no cerrado) |
+| Fuera de cualquier token y llega EOF | Retornar token especial EOF al parser |
+| Recorriendo cinta completa (ejercicios 8-12) | EOF es la condición de parada, ir al estado final y retornar resultado |
+
+### EOF en ejercicios de recorrido de cinta (8-12)
+
+En estos ejercicios el DT no busca tokens, sino que **procesa toda la cinta**. EOF siempre es la condición de parada y lleva al estado final que retorna el resultado:
+
+```
+; Patrón general para ejercicios de recorrido
+
+  q_cualquiera ──EOF──> qFinal (return resultado)
+```
+
+> **Regla práctica:** en ejercicios de recorrido, cada estado debe tener una transición con EOF que lleve al estado final. Si no la tiene, el DT queda "colgado" al llegar al fin de la cinta.
+
+---
+
+## 15.4 Resumen: DT clásico vs DT con variables
+
+| Característica | DT clásico | DT con variables |
+|---|---|---|
+| Objetivo | Reconocer si una cadena pertenece a un token | Reconocer Y acumular información |
+| Salida | Nombre del token | Token + valor acumulado (contador, string, etc.) |
+| Uso en compiladores | Reconocimiento de tokens | Recorrido de cinta con procesamiento |
+| Acciones en transiciones | No tiene | Sí: `cnt++`, `word += char`, `if (...)` |
+| Estado final | `return TOKEN` | `return resultado` |
+
+
+
+
