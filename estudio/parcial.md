@@ -54,15 +54,16 @@ int cp = 0
 | otro    | todo lo demás      |
 
 ### PASO 4 — Tabla de transición
-| Estado | '/'  | '*'  | espacio | otro         | EOF      |
-|--------|------|------|---------|--------------|----------|
-| q0     | q1   | q0   | q0      | q0           | return cp |
-| q1     | q0   | q2   | q0      | q0           | return cp |
-| q2     | q3   | q4   | q2      | q3 / cp=cp+1 | return cp |
-| q3     | q3   | q4   | q2      | q3           | return cp |
-| q4     | q0   | q4   | q2      | q3           | return cp |
+| Estado | '/'        | '*'        | espacio | otro       | EOF       |
+|--------|------------|------------|---------|------------|-----------|
+| q0     | q1         | q0         | q0      | q0         | return cp |
+| q1     | q0         | q2         | q0      | q0         | return cp |
+| q2     | q3, cp++   | q3, cp++   | q2      | q3, cp++   | return cp |
+| q3     | q3         | q4         | q2      | q3         | return cp |
+| q4     | q0         | q4         | q2      | q3, cp++   | return cp |
 
 ```
+
 # PRIMER PARCIAL (R)
 ## INF329 SA–COMPILADORES. GESTIÓN 1-2022
 ### Mar 26 de julio de 2022
@@ -154,13 +155,13 @@ int cpd = 0
 int cpf = 0
 
 ### PASO 1 — Clases
-| Clase   | Descripción        |
-|---------|--------------------|
-| '{'     | barra              |
-| '}'     | asterisco          |
- espacio
-| EOF     | fin de cinta       |
-| otro    | todo lo demás      |
+| Clase   | Descripción             |
+|---------|-------------------------|
+| '{'     | abre comentario Delphi  |
+| '}'     | cierra comentario Delphi|
+| espacio | espacio                 |
+| EOF     | fin de cinta            |
+| otro    | todo lo demás           |
 
 ### PASO 2 — Estados
 | Estado | Significado                                      |
@@ -227,21 +228,18 @@ Ef:
 Se considera palabra a todo substring que no tiene espacios ni EOF.
 ```
 ### PASO 1 — Clases
-| Clase   | Descripción                    |
-|---------|--------------------------------|
-| espacio | separador de palabras          |
-| EOF     | fin de cinta                   |
-| chat    | todo lo demás                  |
-
-### PASO 2 — Estados
-                                     
-
+| Clase   | Descripción           |
+|---------|-----------------------|
+| char    | todo lo demás         |
+| espacio | separador de palabras |
+| EOF     | fin de cinta          |
+                         
 ### PASO 4 — Tabla
-| Estado | char | espacio         | EOF           |
-|--------|------|-----------------|---------------|
-| q0     | q1   | q0              |  return true  |
-| q1     | q2   | qF return false |  return false |
-| q2     | q1   | q0              |  return true  |
+| Estado | char | espacio      | EOF          |
+|--------|------|--------------|--------------|
+| q0     | q1   | q0           | return true  |
+| q1     | q2   | return false | return false |
+| q2     | q1   | q0           | return true  |
 
 ### PASO 3 — Ejemplos
 "AB CD EOF"   → 2 palabras de longitud 2 → true
@@ -262,45 +260,47 @@ Dibuje un dt, sin acciones semánticas, para reconocer a (los nombres de) estos 
 
 ```
 ### PASO 1 — Clases
-| Clase    | Descripción                    |
-|----------|--------------------------------|
-| digitoPar  | 0,2,4,6,8                    |
-| digitoImpar| 1,3,5,7,9                    |
-| 'A'      | letra A especial               |
-| letra    | B-Z (todo excepto A)           |
-| otro     | EOF o separador                |
+| Clase       | Descripción          |
+|-------------|----------------------|
+| digitoPar   | 0,2,4,6,8            |
+| digitoImpar | 1,3,5,7,9            |
+| 'A'         | letra A especial     |
+| letra       | B-Z (todo excepto A) |
+| otro        | EOF o separador      |
 
 ### PASO 2 — Estados
-| Estado | Significado                                           |
-|--------|-------------------------------------------------------|
-| q0     | no sé nada                                            |
-| q1     | llevo solo dígitos, último fue PAR (puede ser NUMX)   |
-| q2     | llevo solo dígitos, último fue IMPAR (puede ser NUMX) |
-| q3     | rompí alternación → es NUM sí o sí                   |
-| q4     | llevo letras/dígitos → es ID sí o sí                 |
-| q5     | último char fue 'A' → puede ser IDNUMA                |
+| Estado | Significado                                         |
+|--------|-----------------------------------------------------|
+| q0     | inicial                                             |
+| q1     | un solo dígito PAR                                  |
+| q2     | un solo dígito IMPAR                                |
+| q3     | 2+ dígitos alternando, último PAR → candidato NUMX  |
+| q4     | 2+ dígitos alternando, último IMPAR → candidato NUMX|
+| q5     | rompió alternación → NUM sí o sí                    |
+| q6     | lleva letras/dígitos mezclados → ID sí o sí         |
+| q7     | último char fue 'A' → candidato IDNUMA              |
 
 ### PASO 3 — Ejemplos
-"21"    → par,impar → NUMX ✓
-"23"    → par,impar → NUMX ✓
-"42"    → par,par   → NUM (rompió alternación) ✓
-"213"   → par,impar,par → NUMX ✓
-"2"     → solo un dígito → NUM ✓
-"hA"    → IDNUMA ✓
-"h2"    → ID ✓
-"246"   → NUM ✓
-"12"    → impar,par → NUMX ✓
+"21"  → q0→q2→q4, otro → NUMX ✓
+"42"  → q0→q1→q5, otro → NUM  ✓
+"213" → q0→q2→q4→q3, otro → NUMX ✓
+"2"   → q0→q1, otro → NUM ✓
+"hA"  → q0→q6→q7, otro → IDNUMA ✓
+"12"  → q0→q2→q3, otro → NUMX ✓
 
 ### PASO 4 — Tabla
-| Estado | digitoPar | digitoImpar | 'A' | letra | otro    |
-|--------|-----------|-------------|-----|-------|---------|
-| q0     | q1        | q2          | q5  | q4    | ERROR   |
-| q1     | q3        | q2          | q5  | q4    | NUM✓    |
-| q2     | q1        | q3          | q5  | q4    | NUM✓    |
-| q3     | q3        | q3          | q5  | q4    | NUM✓    |
-| q4     | q4        | q4          | q5  | q4    | ID✓     |
-| q5     | q4        | q4          | q5  | q4    | IDNUMA✓ |
+| Estado | digitoPar | digitoImpar | 'A' | letra | otro   |
+|--------|-----------|-------------|-----|-------|--------|
+| q0     | q1        | q2          | q7  | q6    | ERROR  |
+| q1     | q5        | q3          | q7  | q6    | NUM    |
+| q2     | q4        | q5          | q7  | q6    | NUM    |
+| q3     | q5        | q4          | q7  | q6    | NUMX   |
+| q4     | q3        | q5          | q7  | q6    | NUMX   |
+| q5     | q5        | q5          | q7  | q6    | NUM    |
+| q6     | q6        | q6          | q7  | q6    | ID     |
+| q7     | q6        | q6          | q7  | q6    | IDNUMA |
 ```
+
 # PRIMER PARCIAL (R2)
 ## INF329 SA–COMPILADORES. GESTIÓN 2-2023
 ### Vie 29 de diciembre de 2023
@@ -343,11 +343,11 @@ int cp = 0
 string actual = ""
 
 ### PASO 1 — Clases
-| Clase   | Descripción              |
-|---------|--------------------------|
-| espacio | separador de palabras    |
-| EOF     | fin de cinta             |
-| otro    | todo lo demás            |
+| Clase   | Descripción           |
+|---------|-----------------------|
+| espacio | separador de palabras |
+| EOF     | fin de cinta          |
+| otro    | todo lo demás         |
 
 ### PASO 2 — Estados
 | Estado | Significado                        |
@@ -356,11 +356,18 @@ string actual = ""
 | q1     | dentro de palabra                  |
 | qf     | estado final                       |
 
+### PASO 3 — Ejemplos
+X=2, "hola mundo EOF"  → 1ra: "hola", 2da: "mundo" → return "mundo"
+X=1, "hola EOF"        → 1ra: "hola" → return "hola"
+X=3, "ab cd EOF"       → solo 2 palabras → return ""
+X=1, "EOF"             → no hay palabras → return ""
+
 ### PASO 4 — Tabla
-| Estado | otro                      | espacio              | EOF              |
-|--------|---------------------------|----------------------|------------------|
-| q0     | q1 / actual=actual+c      | q0                   | qf return ""     |
-| q1     | q1 / actual=actual+c      | q0 / cp++ if(cp=X) qf return actual; actual="" | qf / cp++ if(cp=X) return actual; return "" |
+| Estado | otro             | espacio                                        | EOF                                      |
+|--------|------------------|------------------------------------------------|------------------------------------------|
+| q0     | q1 / actual+=c   | q0                                             | qf / return ""                           |
+| q1     | q1 / actual+=c   | cp++ / if(cp=X) qf return actual; actual="" q0 | cp++ / if(cp=X) qf return actual; return "" |
+
 ```
 **3.** *(Diagrama de Transiciones)* Un lenguaje usa Tokens que son formados con **solamente** Dígitos y Letras. Estos son:
 
@@ -372,33 +379,40 @@ string actual = ""
 Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) estos Tokens.
 ```
 ### PASO 1 — Clases
-| Clase  | Descripción              |
-|--------|--------------------------|
-| parDig | 0,2,4,6,8                |
-| imDig  | 1,3,5,7,9                |
-| vocal  | A,E,I,O,U                |
-| letra  | consonantes              |
-| otro   | EOF o separador          |
+| Clase | Descripción     |
+|-------|-----------------|
+| parDig   | 0,2,4,6,8    |
+| imDig    | 1,3,5,7,9    |
+| vocal    | A,E,I,O,U    |
+| consona  | consonantes  |
+| otro     | EOF o separador |
 
 ### PASO 2 — Estados
-| Estado | Significado                          |
-|--------|--------------------------------------|
-q0 → inicial
-q1 → leyendo solo dígitos (podría ser NUMP o NUMI)
-q2 → último dígito par (candidato NUMP)
-q3 → último dígito impar (candidato NUMI)
-q4 → leyendo letras/dígitos mezclados o solo letras (candidato ID o IDV)
-q5 → último carácter fue vocal (candidato IDV)              |
+| Estado | Significado                                    |
+|--------|------------------------------------------------|
+| q0     | inicial                                        |
+| q1     | solo dígitos, último PAR → candidato NUMP      |
+| q2     | solo dígitos, último IMPAR → candidato NUMI    |
+| q3     | letras/dígitos mezclados, último NO vocal → ID |
+| q4     | letras/dígitos mezclados, último vocal → IDV   |
+
+### PASO 3 — Ejemplos
+"24"    → q0→q1→q1, otro → NUMP ✓
+"13"    → q0→q2→q2, otro → NUMI ✓
+"hola"  → q0→q3→q4→q3→q4, otro → IDV ✓
+"test"  → q0→q3→q4→q3→q3, otro → ID ✓
+"2A"    → q0→q1→q4, otro → IDV ✓
+"2b"    → q0→q1→q3, otro → ID ✓
 
 ### PASO 4 — Tabla
-| Estado | díg par | díg impar | vocal | consonante | otro (retract) |
-|--------|---------|-----------|-------|------------|----------------|
-| q0     | q1      | q2        | q3    | q3         | error          |
-| q1     | q1      | q2        | q3    | q3         | return NUMP    |
-| q2     | q1      | q2        | q3    | q3         | return NUMI    |
-| q3     | q5      | q5        | q4    | q5         | return ID      |
-| q4     | q5      | q5        | q4    | q5         | return IDV     |
-| q5     | q5      | q5        | q4    | q5         | return ID      |
+| Estado | parDig | imDig | vocal | consona | otro      |
+|--------|--------|-------|-------|---------|-----------|
+| q0     | q1     | q2    | q4    | q3      | ERROR     |
+| q1     | q1     | q2    | q4    | q3      | NUMP      |
+| q2     | q1     | q2    | q4    | q3      | NUMI      |
+| q3     | q3     | q3    | q4    | q3      | ID        |
+| q4     | q3     | q3    | q4    | q3      | IDV       |
+
 ```
 ---
 
@@ -459,12 +473,7 @@ Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) es
 
 ### PASO 2 — Estados
 | Estado | Significado                          |
-|--------|--------------------------------------|
-| q0     | no sé nada                           |
-| q1     | vi 'y'                               |
-| q2     | llevo solo letras (no y sola)        |
-| q3     | llevo dígitos                        |
-| q4     | llevo letras y dígitos → IDNUM       |
+|--------|--------------------------------------| 
 
 ### PASO 3 — Ejemplos
 "yz"    → YZ ✓
@@ -532,6 +541,7 @@ Dibuje un dt, **sin acciones semánticas**, para reconocer a (los nombres de) es
 | q4     | q4   | q2   | q2   | q0    |
 ```
 ---
+
 # PRIMER PARCIAL
 ## INF329 SA–COMPILADORES. GESTIÓN 2-2024
 ### Vie 01 de noviembre de 2024
@@ -584,6 +594,7 @@ Como se sabe, un NUM es una palabra formada con solamente Dígitos. Recuerde que
 Para convertir un String a entero, use la función toInt. Por ejemplo,
 
     int x=toInt(ac); //ac es un String.
+
 # PRIMER PARCIAL
 ## INF329 SA COMPILADORES. GESTIÓN 1-2025
 ### Jue 30 de mayo de 2025
@@ -699,6 +710,7 @@ int cp = 0
 | q2     | q1   | q0   | q1      | q2               | qf return cp |
 ```
 ---
+
 # PRIMER PARCIAL
 ## INF329 SA–COMPILADORES. GESTIÓN 2-2024
 ### Vie 01 de noviembre de 2024
@@ -750,6 +762,7 @@ Como se sabe, un NUM es una palabra formada con solamente Dígitos. Recuerde que
 Para convertir un String a entero, use la función toInt. Por ejemplo,
 
     int x=toInt(ac); //ac es un String.
+
 # PRIMER PARCIAL (R)
 ## INF329 SA COMPILADORES. GESTIÓN 1-2025
 ### Sáb 14 de junio de 2025
